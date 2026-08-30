@@ -1,13 +1,24 @@
 import { Camera, CameraView } from "expo-camera";
+import * as FileSystem from "expo-file-system/legacy";
 import { router } from "expo-router";
 import { ArrowLeft, ImageIcon, Scan } from "lucide-react-native";
 import { useRef, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? "http://localhost:8081";
 
 export default function ScanScreen() {
   const [cameraPermission, setCameraPermission] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
   const cameraRef = useRef<CameraView>(null);
 
   const openCamera = async () => {
@@ -15,6 +26,31 @@ export default function ScanScreen() {
 
     if (permission.status === "granted") {
       setCameraPermission(true);
+    }
+  };
+
+  const usePhoto = async () => {
+    if (!photoUri) return;
+    setScanning(true);
+
+    try {
+      const base64 = await FileSystem.readAsStringAsync(photoUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const res = await fetch(`${API_BASE}/api/scan-food`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base64Image: base64, mediaType: "image/jpeg" }),
+      });
+      const result = await res.json();
+      router.push({
+        pathname: "/scan-result",
+        params: { result: JSON.stringify(result) },
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setScanning(false);
     }
   };
 
@@ -60,8 +96,16 @@ export default function ScanScreen() {
             <Text style={styles.retakeText}>Retake</Text>
           </Pressable>
 
-          <Pressable style={styles.usePhotoButton}>
-            <Text style={styles.usePhotoText}>Use Photo</Text>
+          <Pressable
+            style={styles.usePhotoButton}
+            onPress={usePhoto}
+            disabled={scanning}
+          >
+            {scanning ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.usePhotoText}>Use Photo</Text>
+            )}
           </Pressable>
         </View>
       </View>
@@ -71,7 +115,6 @@ export default function ScanScreen() {
   return (
     <View style={styles.container}>
       <CameraView ref={cameraRef} style={styles.camera} facing="back">
-        {/* Dark overlay */}
         <View style={styles.overlay}>
           {/* Header */}
           <View style={styles.header}>

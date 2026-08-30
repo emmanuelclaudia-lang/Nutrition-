@@ -24,7 +24,7 @@ export default function HomeScreen() {
               <Text style={[styles.title, { opacity: 0 }]}>Nutrition+</Text>
             </LinearGradient>
           </MaskedView>
-
+          
           <Pressable style={styles.menuButton}>
             <Menu size={24} color="#F5F5F2" />
           </Pressable>

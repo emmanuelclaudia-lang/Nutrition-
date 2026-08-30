@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Scan, BookOpen } from "lucide-react-native";
+import { BookOpen, Home, Scan } from "lucide-react-native";
 
 export default function TabLayout() {
   return (
@@ -30,7 +30,7 @@ export default function TabLayout() {
         name="scan"
         options={{
           title: "Scan",
-          tabBarIcon: ({ color }) => <Scan size={24} color={color} />,diary.tsx
+          tabBarIcon: ({ color }) => <Scan size={24} color={color} />,
         }}
       />
 

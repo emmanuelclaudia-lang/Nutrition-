@@ -1,3 +1,4 @@
+// utils/mealStorage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type MealType = "breakfast" | "lunch" | "dinner" | "snack";
