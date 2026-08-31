@@ -108,10 +108,10 @@ export default function DiaryScreen() {
           })
         )}
 
-        {/* Empty/add meal */}
+        {/* add meal */}
         <Pressable
           style={styles.addMeal}
-          onPress={() => router.push("/(tabs)/scan")}
+          onPress={() => router.push("/add-meal")}
         >
           <Text style={styles.addIcon}>+</Text>
 

@@ -1,4 +1,3 @@
-// utils/mealStorage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type MealType = "breakfast" | "lunch" | "dinner" | "snack";
@@ -6,7 +5,7 @@ export type MealType = "breakfast" | "lunch" | "dinner" | "snack";
 export type SavedMeal = {
   id: string;
   mealType: MealType;
-  date: string; // YYYY-MM-DD
+  date: string; 
   items: {
     name: string;
     portion_estimate: string;

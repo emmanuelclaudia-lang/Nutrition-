@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import { saveMeal, MealType } from "../utils/mealStorage";
 
 type FoodItem = {
   name: string;
@@ -24,7 +24,7 @@ type FoodItem = {
   fat_g: number;
 };
 
-const API_BASE = "http://192.168.100.178:8081";
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? "http://localhost:8081";
 
 export default function ScanResultScreen() {
   const { result } = useLocalSearchParams<{ result: string }>();
@@ -33,6 +33,9 @@ export default function ScanResultScreen() {
   const [items, setItems] = useState<FoodItem[]>(parsed?.items ?? []);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [recalculating, setRecalculating] = useState<number | null>(null);
+
+  const [mealType, setMealType] = useState<MealType>("breakfast");
+  const [saving, setSaving] = useState(false);
 
   if (!parsed) return null;
 
@@ -80,6 +83,24 @@ export default function ScanResultScreen() {
     }),
     { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
   );
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await saveMeal({
+        id: Date.now().toString(),
+        mealType,
+        date: new Date().toISOString().split("T")[0],
+        items,
+        total,
+      });
+      router.push("/(tabs)/diary");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -172,6 +193,42 @@ export default function ScanResultScreen() {
               Confidence: {parsed.confidence}
             </Text>
           </View>
+
+          <View style={styles.mealTypeRow}>
+            {(["breakfast", "lunch", "dinner", "snack"] as MealType[]).map(
+              (type) => (
+                <Pressable
+                  key={type}
+                  style={[
+                    styles.mealTypePill,
+                    mealType === type && styles.mealTypePillActive,
+                  ]}
+                  onPress={() => setMealType(type)}
+                >
+                  <Text
+                    style={[
+                      styles.mealTypeText,
+                      mealType === type && styles.mealTypeTextActive,
+                    ]}
+                  >
+                    {type[0].toUpperCase() + type.slice(1)}
+                  </Text>
+                </Pressable>
+              ),
+            )}
+          </View>
+
+          <Pressable
+            style={styles.saveButton}
+            onPress={handleSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.saveButtonText}>Save to {mealType}</Text>
+            )}
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -249,4 +306,24 @@ const styles = StyleSheet.create({
   },
   totalMacro: { fontSize: 14, fontWeight: "600", color: "#1A1A1A" },
   confidence: { fontSize: 12, color: "#767676", marginTop: 8 },
+
+  mealTypeRow: { flexDirection: "row", gap: 8, marginTop: 16 },
+  mealTypePill: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: "#F0F0F0",
+    alignItems: "center",
+  },
+  mealTypePillActive: { backgroundColor: "#4A7A3D" },
+  mealTypeText: { fontSize: 13, color: "#3A3A3A", fontWeight: "500" },
+  mealTypeTextActive: { color: "#FFFFFF" },
+  saveButton: {
+    backgroundColor: "#4A7A3D",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 12,
+  },
+  saveButtonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 15 },
 });
