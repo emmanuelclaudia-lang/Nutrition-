@@ -1,10 +1,46 @@
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
+import { Link, router, useFocusEffect } from "expo-router";
 import { Menu, Scan } from "lucide-react-native";
+import { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { getMealsByDate, SavedMeal, MealType } from "../../utils/mealStorage";
+
+const MEAL_META: Record<MealType, { label: string; emoji: string }> = {
+  breakfast: { label: "Breakfast", emoji: "🍳" },
+  lunch: { label: "Lunch", emoji: "🥗" },
+  dinner: { label: "Dinner", emoji: "🍽️" },
+  snack: { label: "Snack", emoji: "🍎" },
+};
+
+const CALORIE_GOAL = 2000; // temporary goal
 
 export default function HomeScreen() {
+  const [meals, setMeals] = useState<SavedMeal[]>([]);
+  const todayKey = new Date().toISOString().split("T")[0];
+
+  useFocusEffect(
+    useCallback(() => {
+      getMealsByDate(todayKey).then(setMeals);
+    }, [todayKey]),
+  );
+
+  const totals = meals.reduce(
+    (acc, meal) => ({
+      calories: acc.calories + meal.total.calories,
+      protein_g: acc.protein_g + meal.total.protein_g,
+      carbs_g: acc.carbs_g + meal.total.carbs_g,
+      fat_g: acc.fat_g + meal.total.fat_g,
+    }),
+    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+  );
+
+  const remaining = Math.max(CALORIE_GOAL - totals.calories, 0);
+  const progressPct = Math.min((totals.calories / CALORIE_GOAL) * 100, 100);
+
+  const descriptionFor = (meal: SavedMeal) =>
+    meal.items.map((item) => item.name).join(", ");
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -24,7 +60,7 @@ export default function HomeScreen() {
               <Text style={[styles.title, { opacity: 0 }]}>Nutrition+</Text>
             </LinearGradient>
           </MaskedView>
-          
+
           <Pressable style={styles.menuButton}>
             <Menu size={24} color="#F5F5F2" />
           </Pressable>
@@ -35,18 +71,24 @@ export default function HomeScreen() {
           <Text style={styles.cardLabel}>TODAY'S CALORIES</Text>
 
           <View style={styles.calorieRow}>
-            <Text style={styles.calories}>1,240</Text>
+            <Text style={styles.calories}>
+              {totals.calories.toLocaleString()}
+            </Text>
             <Text style={styles.calorieUnit}> kcal</Text>
           </View>
 
-          <Text style={styles.goalText}>of 2,000 kcal goal</Text>
+          <Text style={styles.goalText}>
+            of {CALORIE_GOAL.toLocaleString()} kcal goal
+          </Text>
 
           {/* Progress bar */}
           <View style={styles.progressBackground}>
-            <View style={styles.progress} />
+            <View style={[styles.progress, { width: `${progressPct}%` }]} />
           </View>
 
-          <Text style={styles.remaining}>760 kcal remaining</Text>
+          <Text style={styles.remaining}>
+            {remaining.toLocaleString()} Kcal remaining
+          </Text>
         </View>
 
         {/* Macro section */}
@@ -54,21 +96,21 @@ export default function HomeScreen() {
 
         <View style={styles.macroContainer}>
           <View style={styles.macro}>
-            <Text style={styles.macroValue}>82g</Text>
+            <Text style={styles.macroValue}>{totals.protein_g}g</Text>
             <Text style={styles.macroLabel}>Protein</Text>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.macro}>
-            <Text style={styles.macroValue}>120g</Text>
+            <Text style={styles.macroValue}>{totals.carbs_g}g</Text>
             <Text style={styles.macroLabel}>Carbs</Text>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.macro}>
-            <Text style={styles.macroValue}>42g</Text>
+            <Text style={styles.macroValue}>{totals.fat_g}g</Text>
             <Text style={styles.macroLabel}>Fat</Text>
           </View>
         </View>
@@ -94,47 +136,37 @@ export default function HomeScreen() {
         {/* Recent meals */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Today's Meals</Text>
+          <Pressable onPress={() => router.push("/(tabs)/diary")}></Pressable>
           <Text style={styles.seeAll}>View all</Text>
         </View>
 
-        <View style={styles.mealCard}>
-          <View style={styles.mealIcon}>
-            <Text>🍳</Text>
+        {meals.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>No meals logged yet today</Text>
           </View>
+        ) : (
+          meals.map((meal) => {
+            const meta = MEAL_META[meal.mealType];
+            return (
+              <View key={meal.id} style={styles.mealCard}>
+                <View style={styles.mealIcon}>
+                  <Text>{meta.emoji}</Text>
+                </View>
 
-          <View style={styles.mealInfo}>
-            <Text style={styles.mealName}>Breakfast</Text>
-            <Text style={styles.mealDescription}>Eggs, toast & avocado</Text>
-          </View>
+                <View style={styles.mealInfo}>
+                  <Text style={styles.mealName}>{meta.label}</Text>
+                  <Text style={styles.mealDescription} numberOfLines={1}>
+                    {descriptionFor(meal)}
+                  </Text>
+                </View>
 
-          <Text style={styles.mealCalories}>350 kcal</Text>
-        </View>
-
-        <View style={styles.mealCard}>
-          <View style={styles.mealIcon}>
-            <Text>🥗</Text>
-          </View>
-
-          <View style={styles.mealInfo}>
-            <Text style={styles.mealName}>Lunch</Text>
-            <Text style={styles.mealDescription}>Chicken salad</Text>
-          </View>
-
-          <Text style={styles.mealCalories}>520 kcal</Text>
-        </View>
-
-        <View style={styles.mealCard}>
-          <View style={styles.mealIcon}>
-            <Text>🍎</Text>
-          </View>
-
-          <View style={styles.mealInfo}>
-            <Text style={styles.mealName}>Snack</Text>
-            <Text style={styles.mealDescription}>Apple & almonds</Text>
-          </View>
-
-          <Text style={styles.mealCalories}>180 kcal</Text>
-        </View>
+                <Text style={styles.mealCalories}>
+                  {meal.total.calories} kcal
+                </Text>
+              </View>
+            );
+          })
+        )}
       </ScrollView>
     </View>
   );
@@ -381,5 +413,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#B8D7A8",
+  },
+  emptyState: {
+    backgroundColor: "#1A1C19",
+    borderRadius: 18,
+    padding: 20,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: "#92958D",
   },
 });
