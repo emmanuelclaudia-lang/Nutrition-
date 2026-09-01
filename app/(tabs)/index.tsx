@@ -5,6 +5,7 @@ import { Menu, Scan } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { getMealsByDate, SavedMeal, MealType } from "../../utils/mealStorage";
+import { getCalorieGoal } from "../../utils/settingsStorage";
 
 const MEAL_META: Record<MealType, { label: string; emoji: string }> = {
   breakfast: { label: "Breakfast", emoji: "🍳" },
@@ -13,15 +14,15 @@ const MEAL_META: Record<MealType, { label: string; emoji: string }> = {
   snack: { label: "Snack", emoji: "🍎" },
 };
 
-const CALORIE_GOAL = 2000; // temporary goal
-
 export default function HomeScreen() {
   const [meals, setMeals] = useState<SavedMeal[]>([]);
+  const [calorieGoal, setCalorieGoalState] = useState(2000);
   const todayKey = new Date().toISOString().split("T")[0];
 
   useFocusEffect(
     useCallback(() => {
       getMealsByDate(todayKey).then(setMeals);
+      getCalorieGoal().then(setCalorieGoalState);
     }, [todayKey]),
   );
 
@@ -35,8 +36,8 @@ export default function HomeScreen() {
     { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
   );
 
-  const remaining = Math.max(CALORIE_GOAL - totals.calories, 0);
-  const progressPct = Math.min((totals.calories / CALORIE_GOAL) * 100, 100);
+  const remaining = Math.max(calorieGoal - totals.calories, 0);
+  const progressPct = Math.min((totals.calories / calorieGoal) * 100, 100);
 
   const descriptionFor = (meal: SavedMeal) =>
     meal.items.map((item) => item.name).join(", ");
@@ -61,7 +62,10 @@ export default function HomeScreen() {
             </LinearGradient>
           </MaskedView>
 
-          <Pressable style={styles.menuButton}>
+          <Pressable
+            style={styles.menuButton}
+            onPress={() => router.push("/settings")}
+          >
             <Menu size={24} color="#F5F5F2" />
           </Pressable>
         </View>
@@ -78,7 +82,7 @@ export default function HomeScreen() {
           </View>
 
           <Text style={styles.goalText}>
-            of {CALORIE_GOAL.toLocaleString()} kcal goal
+            of {calorieGoal.toLocaleString()} kcal goal
           </Text>
 
           {/* Progress bar */}
@@ -136,8 +140,9 @@ export default function HomeScreen() {
         {/* Recent meals */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Today's Meals</Text>
-          <Pressable onPress={() => router.push("/(tabs)/diary")}></Pressable>
-          <Text style={styles.seeAll}>View all</Text>
+          <Pressable onPress={() => router.push("/(tabs)/diary")}>
+            <Text style={styles.seeAll}>View all</Text>
+          </Pressable>
         </View>
 
         {meals.length === 0 ? (
