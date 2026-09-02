@@ -24,7 +24,9 @@ type FoodItem = {
   fat_g: number;
 };
 
+console.log("EXPO_PUBLIC_API_BASE:", process.env.EXPO_PUBLIC_API_BASE);
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? "http://localhost:8081";
+console.log("Using API_BASE:", API_BASE);
 
 export default function ScanResultScreen() {
   const { result } = useLocalSearchParams<{ result: string }>();
