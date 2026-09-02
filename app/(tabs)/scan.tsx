@@ -29,46 +29,35 @@ export default function ScanScreen() {
     }
   };
 
-const usePhoto = async () => {
-  if (!photoUri) return;
-  setScanning(true);
+  const usePhoto = async () => {
+    if (!photoUri) return;
+    setScanning(true);
 
-  try {
-    const base64 = await FileSystem.readAsStringAsync(photoUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    console.log("Base64 length:", base64.length);
-
-    const res = await fetch(`${API_BASE}/api/scan-food`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ base64Image: base64, mediaType: "image/jpeg" }),
-    });
-    console.log("Response status:", res.status);
-
-    const rawText = await res.text();
-    console.log("Raw response:", rawText);
-
-    const result = JSON.parse(rawText); 
-    console.log("Parsed result:", result);
-
-    router.push({
-      pathname: "/scan-result",
-      params: { result: JSON.stringify(result) },
-    });
-  } catch (err) {
-    console.error("usePhoto error:", err);
-  } finally {
-    setScanning(false);
-  }
-};
+    try {
+      const base64 = await FileSystem.readAsStringAsync(photoUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const res = await fetch(`${API_BASE}/api/scan-food`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base64Image: base64, mediaType: "image/jpeg" }),
+      });
+      const result = await res.json();
+      router.push({
+        pathname: "/scan-result",
+        params: { result: JSON.stringify(result) },
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const takePhoto = async () => {
     if (!cameraRef.current) return;
 
-    const photo = await cameraRef.current.takePictureAsync({
-      quality: 0.5,
-    });
+    const photo = await cameraRef.current.takePictureAsync();
 
     if (photo?.uri) {
       setPhotoUri(photo.uri);
