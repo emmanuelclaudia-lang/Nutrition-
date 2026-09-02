@@ -5,7 +5,7 @@ export type MealType = "breakfast" | "lunch" | "dinner" | "snack";
 export type SavedMeal = {
   id: string;
   mealType: MealType;
-  date: string; 
+  date: string;
   items: {
     name: string;
     portion_estimate: string;
@@ -38,4 +38,10 @@ export async function getAllMeals(): Promise<SavedMeal[]> {
 export async function getMealsByDate(date: string): Promise<SavedMeal[]> {
   const all = await getAllMeals();
   return all.filter((m) => m.date === date);
+}
+
+export async function deleteMeal(id: string) {
+  const existing = await getAllMeals();
+  const updated = existing.filter((m) => m.id !== id);
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 }

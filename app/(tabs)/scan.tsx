@@ -1,5 +1,6 @@
 import { Camera, CameraView } from "expo-camera";
 import * as FileSystem from "expo-file-system/legacy";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { ArrowLeft, ImageIcon, Scan } from "lucide-react-native";
 import { useRef, useState } from "react";
@@ -10,6 +11,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -51,6 +53,26 @@ export default function ScanScreen() {
       console.error(err);
     } finally {
       setScanning(false);
+    }
+  };
+
+  const pickFromGallery = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        "Permission needed",
+        "Allow access to your photos to select a meal image.",
+      );
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets[0]?.uri) {
+      setPhotoUri(result.assets[0].uri);
     }
   };
 
@@ -142,7 +164,7 @@ export default function ScanScreen() {
 
           {/* Bottom controls */}
           <View style={styles.bottomControls}>
-            <Pressable style={styles.galleryButton}>
+            <Pressable style={styles.galleryButton} onPress={pickFromGallery}>
               <ImageIcon size={24} color="#FFFFFF" />
               <Text style={styles.galleryText}>Photos</Text>
             </Pressable>

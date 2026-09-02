@@ -3,8 +3,20 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import { Calendar } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { getMealsByDate, MealType, SavedMeal } from "../../utils/mealStorage";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  Alert,
+} from "react-native";
+import {
+  getMealsByDate,
+  MealType,
+  SavedMeal,
+  deleteMeal,
+} from "../../utils/mealStorage";
 
 const MEAL_META: Record<MealType, { label: string; emoji: string }> = {
   breakfast: { label: "Breakfast", emoji: "🍳" },
@@ -40,6 +52,20 @@ export default function DiaryScreen() {
   const descriptionFor = (meal: SavedMeal) =>
     meal.items.map((item) => item.name).join(", ");
 
+  const handleDelete = (id: string) => {
+    Alert.alert("Delete meal?", "This can't be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          await deleteMeal(id);
+          getMealsByDate(todayKey).then(setMeals);
+        },
+      },
+    ]);
+  };
+  
   return (
     <View style={styles.container}>
       <ScrollView
@@ -87,7 +113,11 @@ export default function DiaryScreen() {
           meals.map((meal) => {
             const meta = MEAL_META[meal.mealType];
             return (
-              <View key={meal.id} style={styles.mealCard}>
+              <Pressable
+                key={meal.id}
+                style={styles.mealCard}
+                onLongPress={() => handleDelete(meal.id)}
+              >
                 <View style={styles.mealIcon}>
                   <Text style={styles.emoji}>{meta.emoji}</Text>
                 </View>
@@ -103,7 +133,7 @@ export default function DiaryScreen() {
                 <Text style={styles.calories}>
                   {totalCaloriesFor(meal)} kcal
                 </Text>
-              </View>
+              </Pressable>
             );
           })
         )}
