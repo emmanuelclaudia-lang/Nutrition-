@@ -33,6 +33,7 @@ export default function ScanResultScreen() {
   const [items, setItems] = useState<FoodItem[]>(parsed?.items ?? []);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [recalculating, setRecalculating] = useState<number | null>(null);
+  const [recalcError, setRecalcError] = useState<string | null>(null);
 
   const [mealType, setMealType] = useState<MealType>("breakfast");
   const [saving, setSaving] = useState(false);
@@ -51,6 +52,7 @@ export default function ScanResultScreen() {
 
   const recalculateItem = async (index: number) => {
     setRecalculating(index);
+    setRecalcError(null);
     try {
       const item = items[index];
       const res = await fetch(`${API_BASE}/api/recalculate-item`, {
@@ -61,16 +63,23 @@ export default function ScanResultScreen() {
           portion_estimate: item.portion_estimate,
         }),
       });
+
+      if (!res.ok) {
+        throw new Error("Couldn't recalculate, try again.");
+      }
       const macros = await res.json();
 
       setItems((prev) =>
         prev.map((it, i) => (i === index ? { ...it, ...macros } : it)),
       );
+      setEditingIndex(null);
     } catch (err) {
       console.error(err);
+      setRecalcError(
+        err instanceof Error ? err.message : "Something went wrong.",
+      );
     } finally {
       setRecalculating(null);
-      setEditingIndex(null);
     }
   };
 
@@ -161,6 +170,11 @@ export default function ScanResultScreen() {
                         <ActivityIndicator color="#FFFFFF" size="small" />
                       ) : (
                         <Text style={styles.recalcButtonText}>Recalculate</Text>
+                      )}
+                      {recalcError && isEditing && (
+                        <Text style={styles.recalcErrorText}>
+                          {recalcError}
+                        </Text>
                       )}
                     </Pressable>
                   </View>
@@ -326,4 +340,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   saveButtonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 15 },
+
+  recalcErrorText: {
+    color: "#FF9B9B",
+    fontSize: 12,
+    marginTop: 6,
+    textAlign: "center",
+  },
 });

@@ -22,6 +22,7 @@ export default function ScanScreen() {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const cameraRef = useRef<CameraView>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const openCamera = async () => {
     const permission = await Camera.requestCameraPermissionsAsync();
@@ -34,6 +35,7 @@ export default function ScanScreen() {
   const usePhoto = async () => {
     if (!photoUri) return;
     setScanning(true);
+    setErrorMessage(null);
 
     try {
       const base64 = await FileSystem.readAsStringAsync(photoUri, {
@@ -44,13 +46,24 @@ export default function ScanScreen() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ base64Image: base64, mediaType: "image/jpeg" }),
       });
-      const result = await res.json();
+      const rawText = await res.text();
+
+      if (!res.ok) {
+        throw new Error("We couldn't analyze that photo. Please try again.");
+      }
+
+      const result = JSON.parse(rawText);
       router.push({
         pathname: "/scan-result",
         params: { result: JSON.stringify(result) },
       });
     } catch (err) {
       console.error(err);
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.",
+      );
     } finally {
       setScanning(false);
     }
@@ -109,7 +122,11 @@ export default function ScanScreen() {
     return (
       <View style={styles.previewContainer}>
         <Image source={{ uri: photoUri }} style={styles.previewImage} />
-
+        {errorMessage && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        )}
         <View style={styles.previewControls}>
           <Pressable
             style={styles.retakeButton}
@@ -402,5 +419,18 @@ const styles = StyleSheet.create({
 
   placeholder: {
     width: 70,
+  },
+
+  errorBanner: {
+    backgroundColor: "#3A1F1F",
+    borderRadius: 12,
+    padding: 12,
+    marginHorizontal: 20,
+    marginBottom: 12,
+  },
+  errorText: {
+    color: "#FF9B9B",
+    fontSize: 13,
+    textAlign: "center",
   },
 });

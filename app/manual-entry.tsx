@@ -18,10 +18,12 @@ const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? "http://localhost:8081";
 export default function ManualEntryScreen() {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<String | null>(null);
 
   const handleAnalyze = async () => {
     if (!description.trim()) return;
     setLoading(true);
+    setErrorMessage(null);
     try {
       const res = await fetch(`${API_BASE}/api/analyze-text`, {
         method: "POST",
@@ -32,8 +34,9 @@ export default function ManualEntryScreen() {
       const rawText = await res.text();
 
       if (!res.ok) {
-        console.error("Server returned an error:", res.status, rawText);
-        return;
+        throw new Error(
+          "We couldn't estimate that meal. Please try rephrasing it.",
+        );
       }
 
       const result = JSON.parse(rawText);
@@ -44,6 +47,11 @@ export default function ManualEntryScreen() {
       });
     } catch (err) {
       console.error(err);
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -64,6 +72,11 @@ export default function ManualEntryScreen() {
         style={{ flex: 1 }}
       >
         <View style={styles.content}>
+          {errorMessage && (
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          )}
           <Text style={styles.label}>What did you eat?</Text>
           <TextInput
             style={styles.input}
@@ -125,4 +138,17 @@ const styles = StyleSheet.create({
   },
   analyzeButtonDisabled: { opacity: 0.4 },
   analyzeButtonText: { color: "#0B110D", fontWeight: "700", fontSize: 15 },
+
+  errorBanner: {
+    backgroundColor: "#3A1F1F",
+    borderRadius: 12,
+    padding: 12,
+    marginHorizontal: 20,
+    marginBottom: 12,
+  },
+  errorText: {
+    color: "#FF9B9B",
+    fontSize: 13,
+    textAlign: "center",
+  },
 });
