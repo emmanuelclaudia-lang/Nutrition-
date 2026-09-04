@@ -33,10 +33,12 @@ export default function ScanResultScreen() {
   const [items, setItems] = useState<FoodItem[]>(parsed?.items ?? []);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [recalculating, setRecalculating] = useState<number | null>(null);
-  const [recalcError, setRecalcError] = useState<string | null>(null);
 
   const [mealType, setMealType] = useState<MealType>("breakfast");
   const [saving, setSaving] = useState(false);
+
+  const [recalcError, setRecalcError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   if (!parsed) return null;
 
@@ -95,6 +97,7 @@ export default function ScanResultScreen() {
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError(null);
     try {
       await saveMeal({
         id: Date.now().toString(),
@@ -106,6 +109,7 @@ export default function ScanResultScreen() {
       router.push("/(tabs)/diary");
     } catch (err) {
       console.error(err);
+      setSaveError("Couldn't save this meal. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -208,6 +212,11 @@ export default function ScanResultScreen() {
             </Text>
           </View>
 
+          {saveError && (
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorText}>{saveError}</Text>
+            </View>
+          )}
           <View style={styles.mealTypeRow}>
             {(["breakfast", "lunch", "dinner", "snack"] as MealType[]).map(
               (type) => (
@@ -345,6 +354,18 @@ const styles = StyleSheet.create({
     color: "#FF9B9B",
     fontSize: 12,
     marginTop: 6,
+    textAlign: "center",
+  },
+  errorBanner: {
+    backgroundColor: "#3A1F1F",
+    borderRadius: 12,
+    padding: 12,
+    marginHorizontal: 20,
+    marginBottom: 12,
+  },
+  errorText: {
+    color: "#FF9B9B",
+    fontSize: 13,
     textAlign: "center",
   },
 });

@@ -1,6 +1,8 @@
 # Nutrition+
 
-An AI-powered food scanner app built with Expo and React Native. Take a photo of your meal and get an instant macro breakdown of calories, protein, carbs, and fat. This app is powered by Google's Gemini vision model.
+Nutrition+ is an AI-powered food scanner app built with Expo and React Native. Users can take a photo of your meal and get an instant macro breakdown of calories, protein, carbs, and fat. This app is powered by Google's Gemini vision model.
+
+Built with Expo (React Native) + Expo Router API routes.
 
 <img width="213" height="436" alt="Home-Tab" src="https://github.com/user-attachments/assets/4da98143-b0be-47f0-b8ee-f1947f3e3ad4" />
 
@@ -9,11 +11,6 @@ An AI-powered food scanner app built with Expo and React Native. Take a photo of
 <img width="216" height="439" alt="Scan-Tab" src="https://github.com/user-attachments/assets/e47649d9-801f-4696-adb5-9b48c099079b" />
 
 <img width="217" height="442" alt="Diary-Tab" src="https://github.com/user-attachments/assets/9810a15a-f579-4279-9a19-eedb65bc9075" />
-# Nutrition+
-
-An AI-powered meal tracker. Scan a photo of your food or describe it in text, and get an instant macro breakdown (calories, protein, carbs, fat) — powered by Google's Gemini API.
-
-Built with Expo (React Native) + Expo Router API routes.
 
 ## Features
 
@@ -29,6 +26,7 @@ Built with Expo (React Native) + Expo Router API routes.
 - [Expo Router](https://docs.expo.dev/router/introduction/) (including API routes for the backend)
 - [Google Gemini API](https://ai.google.dev/) for food recognition and macro estimation
 - AsyncStorage for local persistence
+- Deployed on [Vercel](https://vercel.com)
 
 ## Getting started
 
@@ -60,6 +58,8 @@ Built with Expo (React Native) + Expo Router API routes.
 ```
 
 Then edit `.env`:
+`GEMINI_API_KEY=your_gemini_api_key_here`
+`EXPO_PUBLIC_API_BASE=http://localhost:8081` your local ip address
 
 4. Start the dev server:
 
@@ -86,7 +86,6 @@ settings.tsx # Calorie goal
 utils/
 mealStorage.ts # AsyncStorage read/write for saved meals
 settingsStorage.ts # AsyncStorage read/write for user goals
-
 
 ## Contributing
 
