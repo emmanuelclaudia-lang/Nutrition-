@@ -58,8 +58,11 @@ Built with Expo (React Native) + Expo Router API routes.
 ```
 
 Then edit `.env`:
-`GEMINI_API_KEY=your_gemini_api_key_here`
-`EXPO_PUBLIC_API_BASE=http://localhost:8081` your local ip address
+```
+GEMINI_API_KEY=your_gemini_api_key_here
+EXPO_PUBLIC_API_BASE=http://localhost:8081
+```
+If you're testing on a physical device via Expo Go, replace `localhost` with your computer's local network IP (e.g. `http://192.178.1.20:8081`) — `localhost` only works for web or a simulator on the same machine.
 
 4. Start the dev server:
 
